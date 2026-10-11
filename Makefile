@@ -1,9 +1,10 @@
+
 SRC_DIR := src
 OUT_DIR := out
 SOURCES := $(wildcard $(SRC_DIR)/*.txt)
 OUTPUTS := $(patsubst $(SRC_DIR)/%.txt,$(OUT_DIR)/%.txt,$(SOURCES))
 
-.PHONY: all check build test clean ci
+.PHONY: all check build test clean ci count
 
 all: test
 
@@ -11,7 +12,7 @@ $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
 $(OUT_DIR)/%.txt: $(SRC_DIR)/%.txt | $(OUT_DIR)
-	@echo " BUILD $< -> $@"
+	@echo "  BUILD $< -> $@"
 	@tr '[:lower:]' '[:upper:]' < $< > $@
 
 check:
@@ -26,7 +27,7 @@ check:
 build: $(OUTPUTS)
 
 test: build
-	@if grep -l '[a-z]' $(OUTPUTS) >/dev/null 2>&1; then \
+	@if grep -L '[a-z]' $(OUTPUTS) >/dev/null 2>&1; then \
 		echo "TEST FAILED: lowercase characters remain"; exit 1; \
 	fi
 	@echo "TEST PASSED"
@@ -35,5 +36,7 @@ clean:
 	rm -rf $(OUT_DIR)
 
 ci: clean check test
-count: build ## count the source files
+
+count: build ## report source files and built words
 	@ls -1 $(SRC_DIR)/*.txt | wc -l
+	@wc -w $(OUTPUTS) | tail -1
